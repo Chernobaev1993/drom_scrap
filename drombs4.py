@@ -2,29 +2,58 @@ import time
 import requests
 from bs4 import BeautifulSoup
 
-city = 'tyumen'
-domain = f'https://{city}.drom.ru/auto'
+# city = 'tyumen'
+# domain = f'https://{city}.drom.ru/auto'
 start_url = 'https://auto.drom.ru/region72/suv/all/?maxprice=1300000&inomarka=1&pts=2&damaged=2&w=2&unsold=1'
 
 
 class Car:
     def __init__(self, **kwargs):
-        self.characters = kwargs
+        self.attrs = kwargs
 
     def print_car(self):
-        for item, value in self.characters.items():
+        for item, value in self.attrs.items():
+            if item == 'characters':
+                continue
             print(f"{item}: {value}")
         print('_______________________________________________________________________________________\n')
 
-    def get_characters(self):
-        return self.characters
+    def set_attrs(self):
+        lst_character = self.attrs['characters'].split(' | ')
+        for item in lst_character:
+            if 'передний' in item:
+                self.attrs['wheel'] = 'передний'
+            elif 'задний' in item:
+                self.attrs['wheel'] = 'задний'
+            elif '4WD' in item:
+                self.attrs['wheel'] = 'полный'
+            elif 'л.с.' in item:
+                self.attrs['engine'] = lst_character[0]
+            elif 'АКПП' in item:
+                self.attrs['trans'] = 'автомат'
+            elif 'механика' in item:
+                self.attrs['trans'] = 'механика'
+            elif 'робот' in item:
+                self.attrs['trans'] = 'робот'
+            elif 'вариатор' in item:
+                self.attrs['trans'] = 'вариатор'
+            elif 'бензин' in item:
+                self.attrs['fuel'] = 'бензин'
+            elif 'дизель' in item:
+                self.attrs['fuel'] = 'дизель'
+            elif 'гибрид' in item:
+                self.attrs['fuel'] = 'гибрид'
+            elif 'электро' in item:
+                self.attrs['fuel'] = 'электрический'
+            elif 'км' in item:
+                self.attrs['run'] = lst_character[-1]
 
 
-def get_main_div(url):
+def get_main_page_div(url):
     get_html = requests.get(url)
     soup = BeautifulSoup(get_html.content, "lxml")
-    main_div = soup.find('div', class_='css-1nvf6xk eojktn00')
-    return main_div
+    main_page_div = soup.find('div', class_='css-1nvf6xk eojktn00')
+    return main_page_div
 
 
 def get_car_list(div):
@@ -36,8 +65,9 @@ def get_car(div):
     try:
         # Ищем нужные нам параметры автомобиля
         link = div['href']
-        car_id = link.split('/')[-1]
+        car_id = int(link.split('/')[-1].split('.')[0])
         name, year = div.find('div', class_="css-l1wt7n e3f4v4l2").find('span').text.split(', ')
+        brand, *model = name.split(' ')
 
         characters = div.find("div", class_="css-1fe6w6s e162wx9x0").find_all('span', class_='css-1l9tp44 e162wx9x0')
         lst = []
@@ -57,33 +87,33 @@ def get_car(div):
             price_grade = price_grade.text
 
         car = Car(
-            link=link,
-            car_id=car_id,
-            name=name,
+            brand=brand.upper(),
+            model=' '.join(model).upper(),
             year=year,
             characters=' | '.join(lst),
             price=price,
-            price_grade=price_grade
+            price_grade=price_grade,
+            car_id=car_id,
+            link=link
         )
-
+        car.set_attrs()
         return car
     except Exception as ex:
         print(ex)
         time.sleep(20)
 
 
-count = 1
-main_div = get_main_div(start_url)
-while main_div:
-    for i in get_car_list(main_div):
-        print(count, end='. ')
-        get_car(i).print_car()
-        count += 1
-    next_page_link = main_div.find('a', class_='css-4gbnjj e24vrp30')
-    if next_page_link:
-        next_page_link = next_page_link['href']
-        main_div = get_main_div(next_page_link)
-    else:
-        main_div = None
+def start():
+    main_div = get_main_page_div(start_url)
+    while main_div:
+        for car_div in get_car_list(main_div):
+            get_car(car_div).print_car()
+        next_page_link = main_div.find('a', class_='css-4gbnjj e24vrp30')
+        if next_page_link:
+            next_page_link = next_page_link['href']
+            main_div = get_main_page_div(next_page_link)
+        else:
+            main_div = None
 
-# next_page = get
+
+start()
