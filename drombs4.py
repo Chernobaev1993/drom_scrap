@@ -48,6 +48,9 @@ class Car:
             elif 'км' in item:
                 self.attrs['run'] = lst_character[-1]
 
+    def get_attrs(self):
+        return self.attrs
+
 
 def get_main_page_div(url):
     get_html = requests.get(url)
@@ -59,6 +62,37 @@ def get_main_page_div(url):
 def get_car_list(div):
     div_list = div.find_all('a', class_='css-xb5nz8 e1huvdhj1')
     return div_list
+
+
+# def get_avg_price(brand, model, year):
+#     # brand = car.get_attrs()['brand']
+#     # model = car.get_attrs()['model']
+#     # year = car.get_attrs()['year']
+#     url = f'https://auto.drom.ru/region72/{brand.lower()}/{model.lower()}/year-{year}/?pts=2&damaged=2&unsold=1'
+#     price = []
+#     main_div = get_main_page_div(url)
+#     print(url, main_div)
+#     while main_div:
+#         for car_div in get_car_list(main_div):
+#             car_price = car_div.find('span', class_='css-46itwz e162wx9x0').text.replace('\xa0', '')
+#             price.append(car_price)
+#         next_page_link = main_div.find('a', class_='css-4gbnjj e24vrp30')
+#         if next_page_link:
+#             next_page_link = next_page_link['href']
+#             main_div = get_main_page_div(next_page_link)
+#         else:
+#             main_div = None
+#     return price
+    # while main_div:
+    #     for car_div in get_car_list(main_div):
+    #         get_car(car_div).print_car()
+    #     next_page_link = main_div.find('a', class_='css-4gbnjj e24vrp30')
+    #     if next_page_link:
+    #         next_page_link = next_page_link['href']
+    #         main_div = get_main_page_div(next_page_link)
+    #     else:
+    #         main_div = None
+    # div_list = get_car_list(main_div)
 
 
 def get_car(div):
@@ -85,7 +119,7 @@ def get_car(div):
             price_grade = 'без оценки'
         else:
             price_grade = price_grade.text
-
+        # avg_price = get_avg_price(brand, '_'.join(model), year)
         car = Car(
             brand=brand.upper(),
             model=' '.join(model).upper(),
@@ -94,7 +128,8 @@ def get_car(div):
             price=price,
             price_grade=price_grade,
             car_id=car_id,
-            link=link
+            link=link,
+            # abf_price=avg_price
         )
         car.set_attrs()
         return car
