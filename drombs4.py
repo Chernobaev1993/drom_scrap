@@ -99,6 +99,7 @@ def get_car(div):
     try:
         # Ищем нужные нам параметры автомобиля
         link = div['href']
+        # Попробуй получить brand и модель через ссылку
         car_id = int(link.split('/')[-1].split('.')[0])
         name, year = div.find('div', class_="css-l1wt7n e3f4v4l2").find('span').text.split(', ')
         brand, *model = name.split(' ')
