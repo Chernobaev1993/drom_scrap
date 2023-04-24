@@ -3,7 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 from car import Car
 
-start_url = 'https://auto.drom.ru/region72/all/?maxprice=500000&minyear=2008&inomarka=1&pts=2&damaged=2&w=2&unsold=1'
+domain = 'https://auto.drom.ru/'
+start_url = f'{domain}region72/all/?maxprice=500000&minyear=2008&inomarka=1&pts=2&damaged=2&w=2&unsold=1'
 
 
 # Возвращает главный тег <div>
@@ -31,11 +32,12 @@ def get_car(div):
         car_id = link_lst[5].split('.')[0]
         year = int(div.find('div', class_="css-l1wt7n e3f4v4l2").find('span').text.split(', ')[1])
 
-        characters = div.find("div", class_="css-1fe6w6s e162wx9x0").find_all('span', class_='css-1l9tp44 e162wx9x0')
-        lst = []
-        for items in characters:
-            lst.append(items.text.replace(',', ''))
-
+        # characters = div.find("div", class_="css-1fe6w6s e162wx9x0").find_all('span', class_='css-1l9tp44 e162wx9x0')
+        characters = div.find("div", class_="css-1fe6w6s e162wx9x0").find_all('span', attrs={"data-ftid": "bull_description-item"})
+        characters_lst = []
+        for item in characters:
+            characters_lst.append(item.text.replace(',', ''))
+        print(characters_lst)
         price = int(div.find('span', class_='css-46itwz e162wx9x0').text.replace('\u00A0', '').replace('₽', ''))
         price_grade = div.find('div', class_='css-11m58oj evjskuu0')
         if not price_grade:
@@ -43,8 +45,8 @@ def get_car(div):
         else:
             price_grade = price_grade.text
 
-        avg_price = get_avg_price(brand, model, year, 72)
-        dif_price = price - avg_price
+        # avg_price = get_avg_price(brand, model, year, 72)
+        # dif_price = price - avg_price
 
         car = Car(
             car_id=car_id,
@@ -54,9 +56,9 @@ def get_car(div):
             year=year,
             price=price,
             price_grade=price_grade,
-            characters=' | '.join(lst),
-            avg_price=avg_price,
-            dif_price=dif_price
+            characters=characters_lst,
+            # avg_price=avg_price,
+            # dif_price=dif_price
         )
         return car
     except Exception as ex:
@@ -65,21 +67,21 @@ def get_car(div):
 
 
 # Возвращает среднюю цену (int) на конкретный авто по конкретному региону
-def get_avg_price(brand, model, year, region):
-    url = f'https://auto.drom.ru/region{region}/{brand}/{model}/?minyear={year-1}&maxyear={year+1}&pts=2&damaged=2&unsold=1'
-    price = []
-    main_div = get_main_page_div(url)
-    while main_div:
-        for car_div in get_car_list(main_div):
-            car_price = int(car_div.find('span', class_='css-46itwz e162wx9x0').text.replace('\u00A0', '').replace('₽', ''))
-            price.append(car_price)
-        next_page_link = main_div.find('a', class_='css-4gbnjj e24vrp30')
-        if next_page_link:
-            next_page_link = next_page_link['href']
-            main_div = get_main_page_div(next_page_link)
-        else:
-            main_div = None
-    return int(sum(price)/len(price))
+# def get_avg_price(brand, model, year, region):
+#     url = f'{domain}region{region}/{brand}/{model}/?minyear={year-1}&maxyear={year+1}&pts=2&damaged=2&unsold=1'
+#     price = []
+#     main_div = get_main_page_div(url)
+#     while main_div:
+#         for car_div in get_car_list(main_div):
+#             car_price = int(car_div.find('span', class_='css-46itwz e162wx9x0').text.replace('\u00A0', '').replace('₽', ''))
+#             price.append(car_price)
+#         next_page_link = main_div.find('a', class_='css-4gbnjj e24vrp30')
+#         if next_page_link:
+#             next_page_link = next_page_link['href']
+#             main_div = get_main_page_div(next_page_link)
+#         else:
+#             main_div = None
+#     return int(sum(price)/len(price))
 
 
 # Запуск основной функции
@@ -99,3 +101,5 @@ def start():
 
 
 start()
+
+# data-ftid=bull_description-item
