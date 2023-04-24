@@ -47,7 +47,6 @@ def create_database(dbname):
         sql = f"CREATE DATABASE {dbname};"
         with conn.cursor() as cursor:
             cursor.execute(sql)
-        conn.commit()
         conn.close()
         print(f'База данных \'{dbname}\' создана')
 
@@ -61,7 +60,6 @@ def drop_database(dbname):
         sql = f"DROP DATABASE {dbname};"
         with conn.cursor() as cursor:
             cursor.execute(sql)
-        conn.commit()
         conn.close()
         print(f'База данных \'{dbname}\' удалена')
 
@@ -101,25 +99,24 @@ def create_table_cars(dbname):
     print('Таблица cars успешно создана')
 
 
-def insert_into_cars(dbname):
+def insert_into_cars(dbname, car_id, brand, model, year, price, link):
     conn = connect_to_db(HOST, USER, PASSWORD, dbname)
     with conn.cursor() as curs:
         sql = f"""INSERT INTO cars(car_id, brand, model, year, price, link) 
                   VALUES
-                  (1, 'Honda', 'CIVIC', 2010, 600000, 'https');"""
-        curs.execute(sql)
+                  (%s, %s, %s, %s, %s, %s);"""
+        curs.execute(sql, (car_id, brand, model, year, price, link))
     conn.close()
     print('Данные в таблицу cars занесены')
 
 
-def insert_into_features(dbname):
+def insert_into_features(dbname, feature_id, engine, fuel, wheel, trans, run, car_id):
     conn = connect_to_db(HOST, USER, PASSWORD, dbname)
     with conn.cursor() as curs:
-        values = None
         sql = f"""INSERT INTO features(feature_id, engine, fuel, wheel, trans, run, car_id) 
                   VALUES
                   (%s, %s, %s, %s, %s, %s, %s);"""
-        curs.execute(sql, (4, '1.2', 'бензин', values, 'передний', '123', 1))
+        curs.execute(sql, (feature_id, engine, fuel, wheel, trans, run, car_id))
     conn.close()
     print('Данные в таблицу features занесены')
 
@@ -131,4 +128,4 @@ def insert_into_features(dbname):
 # create_table_cars(DB_NAME_NEW)
 # create_table_features(DB_NAME_NEW)
 # insert_into_cars(DB_NAME_NEW)
-insert_into_features(DB_NAME_NEW)
+# insert_into_features(DB_NAME_NEW)
